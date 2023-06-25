@@ -8,12 +8,16 @@
 
 #define MAX_PROCESSES 20
 #define MAX_NUM_QUEUES 2
+#define MAX_QUEUE_SIZE 100
+
 
 // • Deverá existir uma estrutura de clock_tick que será utilizada para controle do quantum (time slice) de execução dos processos.
+// enum de tipo de escalonador
+
 struct clock_tick {
-    int total_time;      // Tempo total do quantum
-    int remaining_time;  // Tempo restante do quantum
-    int is_expired;      // Flag para indicar se o quantum foi esgotado
+    int totalTime;      // Tempo total do quantum
+    int remainingTime;  // Tempo restante do quantum
+    int isExpired;      // Flag para indicar se o quantum foi esgotado
 };
 
 typedef struct {
@@ -26,7 +30,7 @@ typedef struct {
 } Process;
 
 typedef struct {
-    Process *processes[MAX_PROCESSES];
+    void *buffer[MAX_QUEUE_SIZE];
     int head;
     int tail;
 } Queue;
@@ -47,58 +51,55 @@ int scheduler_add_queue(Scheduler *s) {
     Queue *q = &(s->queues[s->num_queues]);
     q->head = 0;
     q->tail = 0;
-
-    // Inicialize os ponteiros de processo da fila como NULL
-    for (int i = 0; i < MAX_PROCESSES; i++) {
-        q->processes[i] = NULL;
-    }
-
     s->num_queues++;
     return s->num_queues - 1;
 }
 
-int enqueue(Queue *q, Process *item) {
-    if ((q->tail + 1) % MAX_PROCESSES == q->head % MAX_PROCESSES) return -1;
-
-    if(item->schedulerType == 1) { // escalonamento por prioridade
-        while (q->tail != q->head && item->priority <= q->processes[q->tail - 1]->priority) {
-            q->tail = (q->tail - 1 + MAX_PROCESSES) % MAX_PROCESSES;
-            q->processes[q->tail] = q->processes[(q->tail - 1 + MAX_PROCESSES) % MAX_PROCESSES];
-        }
-
-        q->processes[q->tail] = item;
-        q->tail = (q->tail + 1) % MAX_PROCESSES;
-        printf("----------------%d Assumiu a posicao nova--------------\n", item->id);
+int enqueue(Queue *q, void *item) {
+    if ((q->tail + 1) % MAX_QUEUE_SIZE == q->head) {
+        return -1; // queue is full
     }
-}
 
-void printQueue(Scheduler *s, int queue_idx) {
-    Queue *q = &(s->queues[queue_idx]);
-    int current = q->head;
+    // Obtém a prioridade do item
+    int itemPriority = ((Process *)item)->priority;
 
-    while (current != q->tail) {
-        Process *process = q->processes[current];
-        printf("Process ID: %d\n", process->id);
-        printf("Priority: %d\n", process->priority);
-        current = (current + 1) % MAX_PROCESSES;
+    // Encontra a posição correta para inserir o item em ordem crescente de prioridade
+    int insertPos = q->head;
+    while (insertPos != q->tail && ((Process *)q->buffer[insertPos])->priority <= itemPriority) {
+        insertPos = (insertPos + 1) % MAX_QUEUE_SIZE;
     }
+
+    // Desloca os itens para abrir espaço para o novo item
+    int currentPos = q->tail;
+    while (currentPos != insertPos) {
+        int prevPos = (currentPos - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
+        q->buffer[currentPos] = q->buffer[prevPos];
+        currentPos = prevPos;
+    }
+
+    // Insere o novo item na posição correta
+    q->buffer[insertPos] = item;
+    q->tail = (q->tail + 1) % MAX_QUEUE_SIZE;
+    return 0;
 }
 
 void *dequeue(Queue *q) {
-    if (q->head == q->tail) return NULL; // queue is empty
-
-    void *item = q->processes[q->head];
-    q->head = (q->head + 1) % MAX_PROCESSES;
+    if (q->head == q->tail) {
+        return NULL; // queue is empty
+    }
+    void *item = q->buffer[q->head];
+    q->head = (q->head + 1) % MAX_QUEUE_SIZE;
     return item;
 }
 
 int scheduler_enqueue(Scheduler *s, int queue_idx, void *item) {
-    if (queue_idx < 0 || queue_idx >= s->num_queues) return -1; // invalid queue index
+    if (queue_idx < 0 || queue_idx >= s->num_queues) {
+        return -1; // invalid queue index
+    }
     return enqueue(&(s->queues[queue_idx]), item);
 }
 
 void *scheduler_dequeue(Scheduler *s) {
-    printf("entrou aqui no dequeue!\n");
     int i;
     for (i = 0; i < s->num_queues; i++) {
         Queue *q = &(s->queues[i]);

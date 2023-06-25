@@ -18,22 +18,16 @@ int main() {
 
         processes[i]->id = (12345 + i);
         processes[i]->creationDate = i;
-        processes[i]->priority = i;
+        processes[i]->priority = rand() % 50;
         processes[i]->time_left = rand() % 50;
         processes[i]->running = rand() % 30;
         processes[i]->schedulerType = 1; 
 
         int result = -1;
-        if (processes[i]->schedulerType == 1) {
-            result = scheduler_enqueue(&s, q1, processes[i]); 
-            printf("result: %d", result);
-        }
-        
+        result = scheduler_enqueue(&s, q1, processes[i]); 
+        printf("result: %d", result);
         if (result == -1) printf("Error selecting process scheduler  %d.\n", processes[i]->id);
     }
-
-    printf("Fila q1:\n");
-    printQueue(&s, q1);
 
     void *item;
     while ((item = scheduler_dequeue(&s)) != NULL) {
