@@ -11,22 +11,30 @@
 #define MAX_QUEUE_SIZE 100
 
 
-// • Deverá existir uma estrutura de clock_tick que será utilizada para controle do quantum (time slice) de execução dos processos.
+// • Deverá existir uma estrutura de clock_tick que será utilizada para controle do quantum (time slice) de execução dos processes.
 // enum de tipo de escalonador
 
-struct clock_tick {
-    int totalTime;      // Tempo total do quantum
+typedef enum {
+    PRIORITY,
+    ROUNDROBIN
+} schedulerType;
+
+typedef struct  {
+    int totalTime;        // Tempo total do processo
+    int quantum;         // Quantum
     int remainingTime;  // Tempo restante do quantum
-    int isExpired;      // Flag para indicar se o quantum foi esgotado
-};
+    int isExpired;     // Flag para indicar se o quantum foi esgotado
+} clockTick;
 
 typedef struct {
     int id;
+    int tempo_exec;
+    int remainingTime;
+    int quantum;
     int creationDate;
     int priority;
-    int time_left;
-    int running;
-    int schedulerType;
+    schedulerType schedule;
+    clockTick timeControl;
 } Process;
 
 typedef struct {
@@ -60,27 +68,73 @@ int enqueue(Queue *q, void *item) {
         return -1; // queue is full
     }
 
-    // Obtém a prioridade do item
-    int itemPriority = ((Process *)item)->priority;
+    if(((Process *)item)->schedule == PRIORITY) {
+        // Obtém a prioridade do item
+        int itemPriority = ((Process *)item)->priority;
 
-    // Encontra a posição correta para inserir o item em ordem crescente de prioridade
-    int insertPos = q->head;
-    while (insertPos != q->tail && ((Process *)q->buffer[insertPos])->priority <= itemPriority) {
-        insertPos = (insertPos + 1) % MAX_QUEUE_SIZE;
+        // Encontra a posição correta para inserir o item em ordem crescente de prioridade
+        int insertPos = q->head;
+        while (insertPos != q->tail && ((Process *)q->buffer[insertPos])->priority <= itemPriority) {
+            insertPos = (insertPos + 1) % MAX_QUEUE_SIZE;
+        }
+
+        // Desloca os itens para abrir espaço para o novo item
+        int currentPos = q->tail;
+        while (currentPos != insertPos) {
+            int prevPos = (currentPos - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
+            q->buffer[currentPos] = q->buffer[prevPos];
+            currentPos = prevPos;
+        }
+
+        // Insere o novo item na posição correta
+        q->buffer[insertPos] = item;
+        q->tail = (q->tail + 1) % MAX_QUEUE_SIZE;
+        return 0;
     }
 
-    // Desloca os itens para abrir espaço para o novo item
-    int currentPos = q->tail;
-    while (currentPos != insertPos) {
-        int prevPos = (currentPos - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
-        q->buffer[currentPos] = q->buffer[prevPos];
-        currentPos = prevPos;
-    }
-
-    // Insere o novo item na posição correta
-    q->buffer[insertPos] = item;
+    Process **processes_queue = (Process **)q->buffer;
+    processes_queue[q->tail] = (Process *)item;
     q->tail = (q->tail + 1) % MAX_QUEUE_SIZE;
+    
     return 0;
+
+}
+
+int roundRobinScheduler(Queue *queue, Process **processes, int processesQuantity) {
+    int totalTime = 0;
+    int i;
+
+    for (i = 0; i < processesQuantity; i++) 
+        printf("Processo %d - Quantum: %d\n", processes[i]->id, processes[i]->quantum);
+        
+    while (1) {
+        int concluded = 1;
+      
+        for (i = 0; i < processesQuantity; i++) {
+            if (processes[i]->remainingTime > 0) {
+                concluded = 0;
+
+                if (processes[i]->remainingTime > processes[i]->quantum) {
+                    totalTime += processes[i]->quantum;
+                    processes[i]->remainingTime -= processes[i]->quantum;
+                    printf("Executando processo %d (Tempo restante: %d)\n",
+                           processes[i]->id, processes[i]->remainingTime);
+
+                    // Reenfileirar o processo na próxima fila
+                    enqueue(queue, &(processes[i]));
+                } else {
+                    totalTime += processes[i]->remainingTime;
+                    processes[i]->remainingTime = 0;
+                    printf("Processo %d concluído!\n", processes[i]->id);
+                }
+            }
+        }
+
+        if (concluded)
+            break;
+    }
+
+    return totalTime;
 }
 
 void *dequeue(Queue *q) {
@@ -96,6 +150,13 @@ int scheduler_enqueue(Scheduler *s, int queue_idx, void *item) {
     if (queue_idx < 0 || queue_idx >= s->num_queues) {
         return -1; // invalid queue index
     }
+
+    if(((Process *)item)->schedule == ROUNDROBIN){
+        Queue *q = &(s->queues[queue_idx]);
+        if ((q->tail + 1) % MAX_QUEUE_SIZE == q->head) return -1; 
+        return enqueue(q, item);
+    }
+
     return enqueue(&(s->queues[queue_idx]), item);
 }
 
@@ -111,15 +172,15 @@ void *scheduler_dequeue(Scheduler *s) {
     return NULL; // all queues are empty
 }
 
-int schedulerDetermin(Process *info) {
-    switch (info->schedulerType) {
-        case 1:
-            return info->priority;
-        case 2:
-           return info->priority; //o que deve ser analisado no round robin - MUDAR
-        default:
-            return info->priority;
-    }
-}
+// int schedulerDetermin(Process *info) {
+//     switch (info->schedule) {
+//         case 1:
+//             return info->priority;
+//         case 2:
+//            return info->quantum; 
+//         default:
+//             return info->priority;
+//     }
+// }
 
 #endif
