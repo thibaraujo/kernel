@@ -1,0 +1,62 @@
+
+
+---------------------------------- PRIORIDADE ----------------------------------
+
+Escalonamento 1
+Process ID: 1234, Priority: 2, Scheduler Type: 0
+Process ID: 1235, Priority: 5, Scheduler Type: 0
+Buffer cheio. O processo 1236 entrará na próxima rodada de alocação.
+Escalonamento 2
+Process ID: 1236, Priority: 7, Scheduler Type: 0
+Process ID: 1237, Priority: 8, Scheduler Type: 0
+Buffer cheio. O processo 1238 entrará na próxima rodada de alocação.
+Escalonamento 3
+Process ID: 1239, Priority: 1, Scheduler Type: 0
+Process ID: 1238, Priority: 3, Scheduler Type: 0
+
+
+---------------------------------- ROUND ROBIN ----------------------------------
+
+Buffer cheio para o processo 12347. Colocando na lista de espera.
+Buffer cheio para o processo 12348. Colocando na lista de espera.
+Buffer cheio para o processo 12349. Colocando na lista de espera.
+Buffer cheio para o processo 12350. Colocando na lista de espera.
+Processo 12345 - Quantum: 2
+Processo 12346 - Quantum: 2
+Executando processo 12345 (Tempo restante: 6)
+Executando processo 12346 (Tempo restante: 7)
+Executando processo 12345 (Tempo restante: 4)
+Executando processo 12346 (Tempo restante: 5)
+Executando processo 12345 (Tempo restante: 2)
+Executando processo 12346 (Tempo restante: 3)
+Processo 12345 concluído!
+Executando processo 12346 (Tempo restante: 1)
+Processo 12346 concluído!
+Processo 12347 - Quantum: 2
+Processo 12348 - Quantum: 2
+Processo 12349 - Quantum: 2
+Processo 12350 - Quantum: 2
+Executando processo 12347 (Tempo restante: 8)
+Executando processo 12348 (Tempo restante: 9)
+Executando processo 12349 (Tempo restante: 10)
+Executando processo 12350 (Tempo restante: 11)
+Executando processo 12347 (Tempo restante: 6)
+Executando processo 12348 (Tempo restante: 7)
+Executando processo 12349 (Tempo restante: 8)
+Executando processo 12350 (Tempo restante: 9)
+Executando processo 12347 (Tempo restante: 4)
+Executando processo 12348 (Tempo restante: 5)
+Executando processo 12349 (Tempo restante: 6)
+Executando processo 12350 (Tempo restante: 7)
+Executando processo 12347 (Tempo restante: 2)
+Executando processo 12348 (Tempo restante: 3)
+Executando processo 12349 (Tempo restante: 4)
+Executando processo 12350 (Tempo restante: 5)
+Processo 12347 concluído!
+Executando processo 12348 (Tempo restante: 1)
+Executando processo 12349 (Tempo restante: 2)
+Executando processo 12350 (Tempo restante: 3)
+Processo 12348 concluído!
+Processo 12349 concluído!
+Executando processo 12350 (Tempo restante: 1)
+Processo 12350 concluído!
