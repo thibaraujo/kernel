@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include "config.h"
 
-// TODO: fila de espera
-// TODO: receber arquivo com informações dos processos e gerar output de resultados
-// TODO: refatorar código
 
 int main() {
+	int i;
+    freopen("inputProcess.txt", "r", stdin);
+    freopen("outputProcess.txt", "w", stdout);
+
     Scheduler s;
     scheduler_init(&s);
 
@@ -25,12 +26,17 @@ int main() {
     printf("\n\n---------------------------------- PRIORIDADE ----------------------------------\n\n");
     int remainingProcesses = MAX_PROCESSES;
     // Criação dos processos
-    for (int i = 0; i < MAX_PROCESSES; i++) {
+    for (i = 0; i < MAX_PROCESSES; i++) {
         processes[i] = (Process *)malloc(sizeof(Process));
-        processes[i]->id = (12345 + i);
-        processes[i]->creationDate = i;
-        processes[i]->priority = rand() % 50;
-        processes[i]->schedule = PRIORITY;
+        scanf("%d %d %d %d %d %d %d",
+            &processes[i]->id,
+            &processes[i]->creationDate,
+            &processes[i]->priority,
+            &processes[i]->schedule,
+            &processes[i]->tempo_exec,
+            &processes[i]->remainingTime,
+            &processes[i]->quantum);
+    
 
         int result = -1;
         result = scheduler_enqueue(&s, q1, processes[i]);
@@ -73,7 +79,7 @@ int main() {
     Process *processesW[MAX_PROCESSES]; 
     int processesCount = 0;
     int processesCountW = 0;
-    for (int i = 0; i < MAX_PROCESSES; i++) {
+    for (i = 0; i < MAX_PROCESSES; i++) {
             processesRR[i] = (Process *)malloc(sizeof(Process));
             processesRR[i]->id = (12345 + i);
             processesRR[i]->tempo_exec = i+8;

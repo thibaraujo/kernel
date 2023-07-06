@@ -33,7 +33,7 @@ typedef struct {
     int quantum;
     int creationDate;
     int priority;
-    schedulerType schedule;
+    int schedule;
     clockTick timeControl;
 } Process;
 
@@ -68,7 +68,7 @@ int enqueue(Queue *q, void *item) {
         return -1; // queue is full
     }
 
-    if(((Process *)item)->schedule == PRIORITY) {
+    if(((Process *)item)->schedule == 0) {
         // Obtém a prioridade do item
         int itemPriority = ((Process *)item)->priority;
 
@@ -151,7 +151,7 @@ int scheduler_enqueue(Scheduler *s, int queue_idx, void *item) {
         return -1; // invalid queue index
     }
 
-    if(((Process *)item)->schedule == ROUNDROBIN){
+    if(((Process *)item)->schedule == 1){
         Queue *q = &(s->queues[queue_idx]);
         if ((q->tail + 1) % MAX_BUFFER_SIZE == q->head) return -1; 
         return enqueue(q, item);
