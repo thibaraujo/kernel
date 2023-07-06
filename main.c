@@ -70,7 +70,9 @@ int main() {
     printf("\n\n---------------------------------- ROUND ROBIN ----------------------------------\n\n");
     // CASO POR ROUND-ROBIN
     Process *processesRR[MAX_PROCESSES]; 
+    Process *processesW[MAX_PROCESSES]; 
     int processesCount = 0;
+    int processesCountW = 0;
     for (int i = 0; i < MAX_PROCESSES; i++) {
             processesRR[i] = (Process *)malloc(sizeof(Process));
             processesRR[i]->id = (12345 + i);
@@ -81,12 +83,19 @@ int main() {
             int result2 = -1;
             result2 = scheduler_enqueue(&s, q2, processesRR[i]);
             if (result2 == -1) {
-                printf("Buffer cheio.  %d.\n", processes[i]->id);
+                printf("Buffer cheio para o processo %d. Colocando na lista de espera.\n", processesRR[i]->id);
+                processesW[processesCountW] = processesRR[i];  // Armazena o processo em processesW
+                processesCountW++;
             } else processesCount++;
     }
     // Executar o escalonamento Round Robin na fila específica
-    int tempo_total = roundRobinScheduler(&(s.queues[q2]), processesRR, processesCount);
+    roundRobinScheduler(&(s.queues[q2]), processesRR, processesCount);
+    if (processesCountW > 0) {
+        roundRobinScheduler(&(s.queues[q2]), processesW, processesCountW);
+    }
+  
 
-    printf("Tempo total de execução: %d\n", tempo_total);
+
+    
     return 0;
 }

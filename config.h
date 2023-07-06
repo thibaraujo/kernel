@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX_PROCESSES 10
+#define MAX_PROCESSES 6
 #define MAX_NUM_QUEUES 3
-#define MAX_BUFFER_SIZE 5
+#define MAX_BUFFER_SIZE 3
 
 
 // • Deverá existir uma estrutura de clock_tick que será utilizada para controle do quantum (time slice) de execução dos processes.
