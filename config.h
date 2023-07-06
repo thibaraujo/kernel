@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX_PROCESSES 20
-#define MAX_NUM_QUEUES 2
-#define MAX_QUEUE_SIZE 100
+#define MAX_PROCESSES 10
+#define MAX_NUM_QUEUES 3
+#define MAX_BUFFER_SIZE 5
 
 
 // • Deverá existir uma estrutura de clock_tick que será utilizada para controle do quantum (time slice) de execução dos processes.
@@ -38,7 +38,7 @@ typedef struct {
 } Process;
 
 typedef struct {
-    void *buffer[MAX_QUEUE_SIZE];
+    void *buffer[MAX_BUFFER_SIZE];
     int head;
     int tail;
 } Queue;
@@ -64,7 +64,7 @@ int scheduler_add_queue(Scheduler *s) {
 }
 
 int enqueue(Queue *q, void *item) {
-    if ((q->tail + 1) % MAX_QUEUE_SIZE == q->head) {
+    if ((q->tail + 1) % MAX_BUFFER_SIZE == q->head) {
         return -1; // queue is full
     }
 
@@ -75,26 +75,26 @@ int enqueue(Queue *q, void *item) {
         // Encontra a posição correta para inserir o item em ordem crescente de prioridade
         int insertPos = q->head;
         while (insertPos != q->tail && ((Process *)q->buffer[insertPos])->priority <= itemPriority) {
-            insertPos = (insertPos + 1) % MAX_QUEUE_SIZE;
+            insertPos = (insertPos + 1) % MAX_BUFFER_SIZE;
         }
 
         // Desloca os itens para abrir espaço para o novo item
         int currentPos = q->tail;
         while (currentPos != insertPos) {
-            int prevPos = (currentPos - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
+            int prevPos = (currentPos - 1 + MAX_BUFFER_SIZE) % MAX_BUFFER_SIZE;
             q->buffer[currentPos] = q->buffer[prevPos];
             currentPos = prevPos;
         }
 
         // Insere o novo item na posição correta
         q->buffer[insertPos] = item;
-        q->tail = (q->tail + 1) % MAX_QUEUE_SIZE;
+        q->tail = (q->tail + 1) % MAX_BUFFER_SIZE;
         return 0;
     }
 
     Process **processes_queue = (Process **)q->buffer;
     processes_queue[q->tail] = (Process *)item;
-    q->tail = (q->tail + 1) % MAX_QUEUE_SIZE;
+    q->tail = (q->tail + 1) % MAX_BUFFER_SIZE;
     
     return 0;
 
@@ -142,18 +142,18 @@ void *dequeue(Queue *q) {
         return NULL; // queue is empty
     }
     void *item = q->buffer[q->head];
-    q->head = (q->head + 1) % MAX_QUEUE_SIZE;
+    q->head = (q->head + 1) % MAX_BUFFER_SIZE;
     return item;
 }
 
 int scheduler_enqueue(Scheduler *s, int queue_idx, void *item) {
-    if (queue_idx < 0 || queue_idx >= s->num_queues) {
+    if (queue_idx < 0 || queue_idx >= (s->num_queues)) {
         return -1; // invalid queue index
     }
 
     if(((Process *)item)->schedule == ROUNDROBIN){
         Queue *q = &(s->queues[queue_idx]);
-        if ((q->tail + 1) % MAX_QUEUE_SIZE == q->head) return -1; 
+        if ((q->tail + 1) % MAX_BUFFER_SIZE == q->head) return -1; 
         return enqueue(q, item);
     }
 
